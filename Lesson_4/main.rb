@@ -157,16 +157,15 @@ end
 
 # Информация о станции
 def station_info()
+    station = text_interface($stations)
+
     system "clear"
-    puts "Station info:"
-    puts ""
 
-    $stations.each { |s| puts "#{s.name} has #{s.trains_by_type("passenger").size} passenger and #{s.trains_by_type("cargo").size} cargo trains."}
+    puts "All trains on station #{station.name}:"
+    station.trains.each { |t| puts "no.#{t.number}"}
 
-    puts ""
-    puts "Press Enter to exit."
+    print "Press Enter to exit."
     gets
-
     system "clear"
 end
 
