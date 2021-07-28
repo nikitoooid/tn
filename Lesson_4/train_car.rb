@@ -1,6 +1,6 @@
 class TrainCar
-    attr_reader :type
-    def initialize(type)
-        @type = type
-    end
+  attr_reader :type
+  def initialize(type)
+    @type = type
+  end
 end
