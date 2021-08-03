@@ -208,6 +208,6 @@ class TextInterface
     end
 
     @trains << train
-    puts "Train created!"
+    puts "#{train.type.capitalize} train #{train.number} created!"
   end
 end
