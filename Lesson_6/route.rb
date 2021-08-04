@@ -1,37 +1,36 @@
 class Route
   include InstanceCounter
-  attr_reader :stations
-  def initialize(start_station, fin_station)
-    @start_station = start_station
-    @fin_station = fin_station
-    @stations = [@start_station, @fin_station]
-    self.validation!
+  
+  attr_accessor :stations
+  
+  def initialize(start_station, end_station)
+    @stations = [start_station, end_station]
+    validate!
   end
 
   def add_station(station)
-    @stations[-1] = station
-    @stations << @fin_station
+    end_station = self.stations[-1]
+    self.stations[-1] = station
+    self.stations << end_station
   end
 
   def remove_station(station)
-    @stations.delete(station)
-  end
-
-  def show
-    @stations.each{ |station| puts station.name }
+    self.stations.delete(station)
   end
 
   def valid?
-    self.validation!
+    validate!
     true
   rescue RuntimeError
     false
   end
 
-  protected
-  def validation!
-    raise "Missing start station!" if @start_station.nil?
-    raise "Missing final station!" if @start_station.nil?
-    raise "Error! Route is clear!" if @stations.empty?
+  def validate!
+    errors = []
+
+    errors << "Not enough stations on the route!" if self.stations.length < 2
+    errors << "Error! Route is clear!" if self.stations.empty?
+
+    raise errors.join("; ") unless errors.empty?
   end
 end

@@ -2,9 +2,8 @@ class Train
   include Manufacturer
   include InstanceCounter
 
-  attr_reader :number, :type, :cars, :curr_station, :next_station, :prev_station
-  attr_accessor :route, :speed
-
+  attr_reader :number, :type, :cars, :current_station, :next_station, :previous_station, :route, :speed
+  
   @@trains = []
 
   TRAIN_NUMBER = /^(\d|[a-z]){3}-?(\d|[a-z]){2}$/i
@@ -12,7 +11,7 @@ class Train
   def initialize(number, type)
     @number = number.to_s
     @type = type
-    self.validation!
+    validate!
 
     @speed = 0
     @cars = []
@@ -24,43 +23,46 @@ class Train
   end
 
   def add_car(car)
-    @cars << car if car.type == @type && @speed == 0
+    @cars << car if car.type == self.type && self.speed == 0
   end
 
   def remove_car(car)
-    @cars.delete(car) if @speed == 0
+    self.cars.delete(car) if self.speed == 0
   end
 
   def set_route(route)
     @route = route
-    @curr_station = route.stations.first
-    @curr_station.recieve(self)
+    @current_station = route.stations.first
+    self.current_station.recieve(self)
   end
 
   def move(direction)
-    current = route.stations.index(@curr_station)
+    current = self.route.stations.index(self.current_station)
     current += 1 if direction == "forward"
     current -= 1 if direction == "backward"
 
-    @curr_station = route.stations[current]
-    @next_station = route.stations[current + 1]
-    @prev_station = route.stations[current - 1]
+    @current_station = self.route.stations[current]
+    @next_station = self.route.stations[current + 1]
+    @previous_station = self.route.stations[current - 1]
 
-    @prev_station.send(self)
-    @curr_station.recieve(self)
+    self.previous_station.send(self)
+    self.current_station.recieve(self)
   end
 
   def valid?
-    self.validation!
+    validate!
     true
   rescue RuntimeError
     false
   end
 
-  protected
-  def validation!
-    raise "Invalid train number!" if @number !~ TRAIN_NUMBER
-    raise "Train type unset!" if @type != "passenger" && @type != "cargo"
+  def validate!
+    errors = []
+
+    errors << "Invalid train number!" if self.number !~ TRAIN_NUMBER
+    errors << "Train type unset!" if self.type != "passenger" && self.type != "cargo"
+
+    raise errors.join("; ") unless errors.empty?
   end
 
 end

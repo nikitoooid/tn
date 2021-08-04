@@ -6,36 +6,35 @@ class TextInterface
 
     # пункты основного меню
     @menu_items = [
-      "Create station",
-      "Create train",
-      "Create route",
-      "Manage routes",
-      "Manage trains",
-      "Move train",
-      "Station info"
+      {title: "Create station", action: :create_station},
+      {title: "Create train", action: :create_train},
+      {title: "Create route", action: :create_route},
+      {title: "Manage routes", action: :manage_routes},
+      {title: "Manage trains", action: :manage_trains},
+      {title: "Move train", action: :move_train},
+      {title: "Station info", action: :station_info}
     ]
+
+    # пункты меню управления маршрутами
+    @manage_routes_menu_items = [
+      {title: "Add station", action: :add_station_to_route},
+      {title: "Remove station", action: :remove_station_from_route}
+    ]
+
+    # пункты меню управления поездами
+    @manage_trains_menu_items = [
+      {title: "Set route", action: :set_train_route},
+      {title: "Add train car", action: :add_train_car},
+      {title: "Remove train car", action: :remove_train_car}
+    ]
+
   end
 
   #запуск программы
   def run
     system "clear"
     loop do
-      case text_interface(@menu_items)
-      when 0
-        create_station()
-      when 1
-        create_train()
-      when 2
-        create_route()
-      when 3
-        manage_routes()
-      when 4
-        manage_trains()
-      when 5
-        move_train()
-      when 6
-        station_info()
-      end
+      run_action(@menu_items)
     end
   end
 
@@ -44,7 +43,12 @@ class TextInterface
   # текстовый интерфейс
   def text_interface(items)
     puts ""                                                                                   #отступ для красоты
-  
+    
+    #определяем, подан на вход массив хэшей или массив объектов
+    if items[0].class == Hash
+      items = items.collect {|item| item[:title]}
+    end
+
     result=0;
     loop do
       # выводим пункты (определяем класс объекта, поданного на вход)
@@ -118,19 +122,24 @@ class TextInterface
     route = text_interface(@routes)
     
     # Редактируем маршрут
-    case text_interface(["Add station", "Remove station"])
-    when 0
-      puts "Add station:"
-      station = text_interface(@stations)
-      route.add_station(station)
-      puts "Station #{station.name} successfully added to the route!"
-    when 1
-      puts "Remove station:"
-      station = text_interface(route.stations)
-      route.remove_station(station)
-      puts "Station #{station.name} successfully deleted from the route!"
-    end
+    run_action(@manage_routes_menu_items, route)
 
+  end
+
+  # Добавление станции к маршруту
+  def add_station_to_route(route)
+    puts "Add station:"
+    station = text_interface(@stations)
+    route.add_station(station)
+    puts "Station #{station.name} successfully added to the route!"
+  end
+
+  # Удаление станции из маршрута
+  def remove_station_from_route(route)
+    puts "Remove station:"
+    station = text_interface(route.stations)
+    route.remove_station(station)
+    puts "Station #{station.name} successfully deleted from the route!"
   end
 
   # Управление поездами
@@ -139,28 +148,36 @@ class TextInterface
     puts "Select train."
     train = text_interface(@trains)
 
-    case text_interface(["Set route", "Add train car", "Remove train car"])
-    when 0
-      puts "Select route."
-      route = text_interface(@routes)
-      train.set_route(route)
-      puts "Route successfuly added to the train no.#{train.number}"
-    when 1
-      train_car = TrainCar.new(train.type)
-      train.add_car(train_car)
-      
-      #проверка, добавился ли вагон
-      if train.speed == 0
-        puts "#{train_car.type} car successfuly added to the train no.#{train.number}"
-      else
-        puts "Train in move!"
-      end
-    when 2
-      train_car = text_interface(train.cars)
-      train.remove_car(train_car)
-      puts "#{train_car.type} car successfully removed from train no.#{train.number}"
-    end
+    run_action(@manage_trains_menu_items, train)
 
+  end
+
+  # Задать поезду маршрут
+  def set_train_route(train)
+    puts "Select route."
+    route = text_interface(@routes)
+    train.set_route(route)
+    puts "Route successfuly added to the train no.#{train.number}"
+  end
+
+  # Задать поезду маршрут
+  def add_train_car(train)
+    train_car = TrainCar.new(train.type)
+    train.add_car(train_car)
+    
+    #проверка, добавился ли вагон
+    if train.cars.include? train_car
+      puts "#{train_car.type.capitalize} car successfuly added to the train no.#{train.number}"
+    else
+      puts "An error occured while adding a #{train_car.type} car!"
+    end
+  end
+
+  # Задать поезду маршрут
+  def remove_train_car(train)
+    train_car = text_interface(train.cars)
+    train.remove_car(train_car)
+    puts "#{train_car.type} car successfully removed from train no.#{train.number}"
   end
 
   # Движение поезда
@@ -208,6 +225,15 @@ class TextInterface
     end
 
     @trains << train
+    system "clear"
     puts "#{train.type.capitalize} train #{train.number} created!"
   end
+
+  # Вспомогательный метод (Запуск действия)
+  def run_action(actions, *args)
+    index = text_interface(actions)
+    action = actions[index][:action]
+    send(action, *args)
+  end
+
 end

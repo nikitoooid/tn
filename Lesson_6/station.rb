@@ -1,11 +1,14 @@
 class Station
   include InstanceCounter
+
   attr_reader :name, :trains
+  
   @@stations = []
 
   def initialize(name)
     @name = name
-    self.validation!
+    validate!
+
     @trains = []
     @@stations << self
   end
@@ -29,15 +32,18 @@ class Station
   end
 
   def valid?
-    self.validation!
+    validate!
     true
   rescue RuntimeError
     false
   end
 
-  protected
-  def validation!
-    raise "Invalid station name!" if @name == ""
+  def validate!
+    errors = []
+
+    errors <<  "Invalid station name!" if @name == ""
+
+    raise errors.join("; ") unless errors.empty?
   end
 
 end
